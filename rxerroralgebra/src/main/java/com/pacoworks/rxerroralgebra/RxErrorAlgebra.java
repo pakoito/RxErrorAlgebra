@@ -53,7 +53,7 @@ public final class RxErrorAlgebra {
         return new RxErrorAlgebraTransformerFactory<Throwable, V>() {
             @Override
             public ObservableTransformer<V, Union2<Throwable, V>> toAlgebra() {
-                return toAlgebra();
+                return RxErrorAlgebra.toAlgebra();
             }
         };
     }
