@@ -16,12 +16,12 @@
 
 package com.pacoworks.rxerroralgebra;
 
-import com.pacoworks.rxsealedunions.Union2;
-import com.pacoworks.rxsealedunions.generic.UnionFactories;
+import java.util.concurrent.Callable;
 
 import org.javatuples.Pair;
 
-import java.util.concurrent.Callable;
+import com.pacoworks.rxsealedunions.Union2;
+import com.pacoworks.rxsealedunions.generic.UnionFactories;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
@@ -29,11 +29,14 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.functions.Function;
 
 /**
- * Contains helpers to convert Observable error handling into a Union2 of E and V.
+ * Contains helpers to convert Observable error handling into a {@link Union2} of E and V to be used in
+ * {@link Observable#compose(ObservableTransformer)}
  * </p>
- * The right side V represents a successful Observable operation.
+ * The right side V represents a successful chain operation.
  * </p>
  * The left side E represents a failure in the chain.
+ * 
+ * @author pakoito
  */
 public final class RxErrorAlgebra {
     private RxErrorAlgebra() {
@@ -41,23 +44,27 @@ public final class RxErrorAlgebra {
     }
 
     /**
-     * Creates an {@link RxErrorAlgebraTransformerFactory} using Throwable for errors and V for values
-     * @param <V> type fo the value
+     * Creates an {@link RxErrorAlgebraTransformerFactory} using {@link Throwable} for errors and {@link V} for values
+     * 
+     * @param <V> type of the value
      * @return a factory
      */
     public static <V> RxErrorAlgebraTransformerFactory<Throwable, V> create() {
         return new RxErrorAlgebraTransformerFactory<Throwable, V>() {
             @Override
             public ObservableTransformer<V, Union2<Throwable, V>> asAlgebra() {
-                return toAlgebraCustom(RxErrorAlgebra.<V> getLeftFunction(), RxErrorAlgebra.<V> getRightFunction());
+                return toAlgebra();
             }
         };
     }
 
     /**
-     * Creates an {@link RxErrorAlgebraTransformerFactory} using {@link Pair} of tag T with Throwable for errors and V for values
+     * Creates an {@link RxErrorAlgebraTransformerFactory} using {@link Pair} of tag {@link T} with {@link Throwable}
+     * for errors and {@link V} for values
+     * 
      * @param <V> type of the value
-     * @param <T> type of the tap
+     * @param <T> type of the tag
+     * @param tagger a function returning the tag associated with an error
      * @return a factory
      */
     public static <V, T> RxErrorAlgebraTransformerFactory<Pair<T, Throwable>, V> createWithTag(
@@ -65,12 +72,20 @@ public final class RxErrorAlgebra {
         return new RxErrorAlgebraTransformerFactory<Pair<T, Throwable>, V>() {
             @Override
             public ObservableTransformer<V, Union2<Pair<T, Throwable>, V>> asAlgebra() {
-                return toAlgebraCustom(RxErrorAlgebra.<V, T> getLeftFunctionWithTag(tagger),
-                        RxErrorAlgebra.<V, T> getRightFunctionWithTag());
+                return toAlgebraWithTag(tagger);
             }
         };
     }
 
+    /**
+     * Creates an {@link RxErrorAlgebraTransformerFactory} using {@link E} for errors and {@link V} for values
+     * 
+     * @param <E> type of the error
+     * @param <V> type of the value
+     * @param leftFunction function that creates the left failure side of the union
+     * @param rightFunction function that creates the right success side of the union
+     * @return a factory
+     */
     public static <E, V> RxErrorAlgebraTransformerFactory<E, V> createCustom(
             final Function<Throwable, ObservableSource<? extends Union2<E, V>>> leftFunction,
             final Function<V, Union2<E, V>> rightFunction) {
@@ -82,16 +97,31 @@ public final class RxErrorAlgebra {
         };
     }
 
+    /**
+     * Creates an {@link ObservableTransformer} using {@link Throwable} for errors and {@link V} for values
+     *
+     * @param <V> type of the value
+     * @return a transformer
+     */
     public static <V> ObservableTransformer<V, Union2<Throwable, V>> toAlgebra() {
         return new ObservableTransformer<V, Union2<Throwable, V>>() {
             @Override
             public ObservableSource<Union2<Throwable, V>> apply(Observable<V> upstream) {
-                return upstream.map(RxErrorAlgebra.<V> getRightFunction())
-                        .onErrorResumeNext(RxErrorAlgebra.<V> getLeftFunction());
+                return upstream.map(RxErrorAlgebra.<V> getRightSimpleFunction())
+                        .onErrorResumeNext(RxErrorAlgebra.<V> getLeftSimpleFunction());
             }
         };
     }
 
+    /**
+     * Creates an {@link ObservableTransformer} using {@link Pair} of tag {@link T} with {@link Throwable} for errors
+     * and {@link V} for values
+     *
+     * @param <V> type of the value
+     * @param <T> type of the tag
+     * @param tagger a function returning the tag associated with an error
+     * @return a transformer
+     */
     public static <V, T> ObservableTransformer<V, Union2<Pair<T, Throwable>, V>> toAlgebraWithTag(
             final Callable<T> tagger) {
         return new ObservableTransformer<V, Union2<Pair<T, Throwable>, V>>() {
@@ -103,6 +133,15 @@ public final class RxErrorAlgebra {
         };
     }
 
+    /**
+     * Creates an {@link ObservableTransformer} using {@link E} for errors and {@link V} for values
+     *
+     * @param <E> type of the error
+     * @param <V> type of the value
+     * @param leftFunction function that creates the left failure side of the union
+     * @param rightFunction function that creates the right success side of the union
+     * @return a transformer
+     */
     public static <V, E> ObservableTransformer<V, Union2<E, V>> toAlgebraCustom(
             final Function<Throwable, ObservableSource<? extends Union2<E, V>>> leftFunction,
             final Function<V, Union2<E, V>> rightFunction) {
@@ -114,7 +153,7 @@ public final class RxErrorAlgebra {
         };
     }
 
-    private static <V> Function<Throwable, ObservableSource<? extends Union2<Throwable, V>>> getLeftFunction() {
+    private static <V> Function<Throwable, ObservableSource<? extends Union2<Throwable, V>>> getLeftSimpleFunction() {
         return new Function<Throwable, ObservableSource<? extends Union2<Throwable, V>>>() {
             @Override
             public ObservableSource<? extends Union2<Throwable, V>> apply(Throwable throwable) throws Exception {
@@ -123,7 +162,7 @@ public final class RxErrorAlgebra {
         };
     }
 
-    private static <V> Function<V, Union2<Throwable, V>> getRightFunction() {
+    private static <V> Function<V, Union2<Throwable, V>> getRightSimpleFunction() {
         return new Function<V, Union2<Throwable, V>>() {
             @Override
             public Union2<Throwable, V> apply(V t) throws Exception {
