@@ -30,7 +30,7 @@ import io.reactivex.ObservableSource;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 
-public class RxErrorAlgebraTransformerFactoryTest {
+public class RxErrorAlgebraTest {
     @Test
     public void error_ToAlgebra_LeftSide() {
         final int errorCode = 20;
