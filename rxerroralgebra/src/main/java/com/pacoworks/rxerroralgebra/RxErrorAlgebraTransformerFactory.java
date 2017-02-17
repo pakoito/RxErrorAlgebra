@@ -33,5 +33,5 @@ public interface RxErrorAlgebraTransformerFactory<E, V> {
      *
      * @return a transformer
      */
-    ObservableTransformer<V, Union2<E, V>> asAlgebra();
+    ObservableTransformer<V, Union2<E, V>> toAlgebra();
 }

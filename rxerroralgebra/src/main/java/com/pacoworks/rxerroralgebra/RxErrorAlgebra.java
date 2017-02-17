@@ -52,7 +52,7 @@ public final class RxErrorAlgebra {
     public static <V> RxErrorAlgebraTransformerFactory<Throwable, V> create() {
         return new RxErrorAlgebraTransformerFactory<Throwable, V>() {
             @Override
-            public ObservableTransformer<V, Union2<Throwable, V>> asAlgebra() {
+            public ObservableTransformer<V, Union2<Throwable, V>> toAlgebra() {
                 return toAlgebra();
             }
         };
@@ -71,7 +71,7 @@ public final class RxErrorAlgebra {
             final Callable<T> tagger) {
         return new RxErrorAlgebraTransformerFactory<Pair<T, Throwable>, V>() {
             @Override
-            public ObservableTransformer<V, Union2<Pair<T, Throwable>, V>> asAlgebra() {
+            public ObservableTransformer<V, Union2<Pair<T, Throwable>, V>> toAlgebra() {
                 return toAlgebraWithTag(tagger);
             }
         };
@@ -91,7 +91,7 @@ public final class RxErrorAlgebra {
             final Function<V, Union2<E, V>> rightFunction) {
         return new RxErrorAlgebraTransformerFactory<E, V>() {
             @Override
-            public ObservableTransformer<V, Union2<E, V>> asAlgebra() {
+            public ObservableTransformer<V, Union2<E, V>> toAlgebra() {
                 return toAlgebraCustom(leftFunction, rightFunction);
             }
         };

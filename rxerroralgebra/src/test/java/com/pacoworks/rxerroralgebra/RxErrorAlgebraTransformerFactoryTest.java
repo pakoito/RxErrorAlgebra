@@ -16,14 +16,14 @@
 
 package com.pacoworks.rxerroralgebra;
 
-import com.pacoworks.rxsealedunions.Union2;
-import com.pacoworks.rxsealedunions.generic.UnionFactories;
+import java.util.concurrent.Callable;
 
 import org.javatuples.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.concurrent.Callable;
+import com.pacoworks.rxsealedunions.Union2;
+import com.pacoworks.rxsealedunions.generic.UnionFactories;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
@@ -36,7 +36,7 @@ public class RxErrorAlgebraTransformerFactoryTest {
         final int errorCode = 20;
         final RxErrorAlgebraTransformerFactory<Throwable, String> converter = RxErrorAlgebra.create();
         final Union2<Throwable, String> result = Observable.<String> error(new TestException(errorCode))
-                .compose(converter.asAlgebra()).blockingFirst();
+                .compose(converter.toAlgebra()).blockingFirst();
         result.continued(this.<Throwable> isEqual(new TestException(errorCode)), this.<String> error());
     }
 
@@ -44,7 +44,7 @@ public class RxErrorAlgebraTransformerFactoryTest {
     public void success_ToAlgebra_RightSide() {
         final String expected = "Paco";
         final RxErrorAlgebraTransformerFactory<Throwable, String> converter = RxErrorAlgebra.create();
-        final Union2<Throwable, String> result = Observable.just(expected).compose(converter.asAlgebra())
+        final Union2<Throwable, String> result = Observable.just(expected).compose(converter.toAlgebra())
                 .blockingFirst();
         result.continued(this.<Throwable> error(), this.isEqual(expected));
     }
@@ -61,7 +61,7 @@ public class RxErrorAlgebraTransformerFactoryTest {
                     }
                 });
         final Union2<Pair<Integer, Throwable>, String> result = Observable.<String> error(new TestException(errorCode))
-                .compose(converter.asAlgebra()).blockingFirst();
+                .compose(converter.toAlgebra()).blockingFirst();
         result.continued(this.isEqual(Pair.<Integer, Throwable> with(tag, new TestException(errorCode))),
                 this.<String> error());
     }
@@ -77,7 +77,7 @@ public class RxErrorAlgebraTransformerFactoryTest {
                         return tag;
                     }
                 });
-        final Union2<Pair<Integer, Throwable>, String> result = Observable.just(expected).compose(converter.asAlgebra())
+        final Union2<Pair<Integer, Throwable>, String> result = Observable.just(expected).compose(converter.toAlgebra())
                 .blockingFirst();
         result.continued(this.<Pair<Integer, Throwable>> error(), this.isEqual(expected));
     }
@@ -99,7 +99,7 @@ public class RxErrorAlgebraTransformerFactoryTest {
                     }
                 });
         final Union2<Throwable, String> result = Observable.<String> error(new TestException(errorCode))
-                .compose(converter.asAlgebra()).blockingFirst();
+                .compose(converter.toAlgebra()).blockingFirst();
         result.continued(this.<Throwable> isEqual(new TestException(errorCode)), this.<String> error());
     }
 
@@ -114,7 +114,7 @@ public class RxErrorAlgebraTransformerFactoryTest {
                         return tag;
                     }
                 });
-        final Union2<Pair<Integer, Throwable>, String> result = Observable.just(expected).compose(converter.asAlgebra())
+        final Union2<Pair<Integer, Throwable>, String> result = Observable.just(expected).compose(converter.toAlgebra())
                 .blockingFirst();
         result.continued(this.<Pair<Integer, Throwable>> error(), this.isEqual(expected));
     }
