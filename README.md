@@ -1,13 +1,13 @@
 # RxErrorAlgebra
 
 
-##Rationale
+## Rationale
 
 
-##Usage
+## Usage
 
 
-##Distribution
+## Distribution
 
 Add as a dependency to your `build.gradle`
 ```groovy
@@ -40,7 +40,7 @@ or to your `pom.xml`
 </dependency>
 ```
 
-##License
+## License
 
 Copyright (c) pakoito 2017
 
